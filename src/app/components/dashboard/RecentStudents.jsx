@@ -24,8 +24,8 @@ function RecentStudents() {
   }, []);
 
   return (
-    <div className={`${rabar.className} bg-[#CFE2E7] my-6 rounded-2xl p-6`}>
-      <h2 className={`text-black text-3xl`}>خوێندکارانی ئەم دواییە</h2>
+    <div className={` bg-[#CFE2E7] my-6 rounded-2xl p-12`}>
+      <h2 className={`${rabar.className} text-black text-3xl`}>خوێندکارانی ئەم دواییە</h2>
       {students.map(item => {
         return <div key={item.id}><SingleStudent name={item.name} age={item.age} /></div>
       })}

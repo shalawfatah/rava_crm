@@ -1,12 +1,12 @@
 import React from "react";
 import localFont from "next/font/local";
 
-const rabar = localFont({ src: "./rabar.ttf" });
+const sarchia = localFont({ src: "./sarchia.ttf" });
 
 function SingleStudent({ name, age }) {
   return (
     <div
-      className={`${rabar.className} text-black flex flex-wrap justify-between items-center`}
+      className={`${sarchia.className} text-black flex flex-wrap justify-between items-center my-6 text-xl`}
     >
       <p>{name}</p>
       <p>{age}</p>

@@ -4,7 +4,7 @@ import Sidebar from "./components/dashboard/Sidebar";
 
 export default function Home() {
   return (
-    <div dir="rtl" className="bg-white p-10">
+    <div dir="rtl" className="bg-white p-10 min-h-screen">
       <div className="bg-[#DFECF1] rounded-3xl flex flex-row flex-wrap p-12 gap-12">
         <Sidebar />
 
