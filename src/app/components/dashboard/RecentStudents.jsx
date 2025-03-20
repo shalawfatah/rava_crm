@@ -1,8 +1,8 @@
 "use client"
 import React, { useEffect, useState } from "react";
-import localFont from "next/font/local";
 import { supabase } from "@/app/utils/supabase/client";
 import SingleStudent from "./SingleStudent";
+import localFont from "next/font/local";
 
 const rabar = localFont({ src: "./rabar.ttf" });
 
