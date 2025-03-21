@@ -6,14 +6,13 @@ import { Column } from "primereact/column";
 import { Button } from "primereact/button";
 import { supabase } from "@/app/utils/supabase/client";
 import localFont from "next/font/local";
-import { useRouter } from 'next/navigation'
+import { useRouter } from "next/navigation";
 
 const rabar = localFont({ src: "../components/dashboard/rabar.ttf" });
 
-
 const StudentsTable = () => {
   const [students, setStudents] = useState([]);
-  const router = useRouter()
+  const router = useRouter();
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -46,7 +45,8 @@ const StudentsTable = () => {
       setStudents((prev) => prev.filter((student) => student.id !== id));
       console.log("Student deleted:", id);
     }
-  };  const actionBodyTemplate = (rowData) => {
+  };
+  const actionBodyTemplate = (rowData) => {
     return (
       <div className="flex gap-2 justify-start ">
         <Button
@@ -72,8 +72,21 @@ const StudentsTable = () => {
   };
 
   return (
-    <div className={`${rabar.className} p-4 bg-white shadow-md bg-linear-65 from-purple-500 to-pink-500 min-h-screen`} dir="rtl">
-      <h2 className="text-2xl font-semibold mb-4 text-gray-700 text-right">لیستی خوێندکاران</h2>
+    <div
+      className={`${rabar.className} p-4 bg-white shadow-md bg-linear-65 from-purple-500 to-pink-500 min-h-screen`}
+      dir="rtl"
+    >
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-semibold text-gray-700 text-right">
+          لیستی خوێندکاران
+        </h2>
+        <Button
+          label="تۆمارکردنی خوێندکاری نوێ"
+          icon="pi pi-plus"
+          className="p-button-primary"
+          onClick={() => router.push("/student/add-student")}
+        />
+      </div>
       <DataTable
         value={students}
         paginator
@@ -82,10 +95,26 @@ const StudentsTable = () => {
         className="rtl-table"
         tableStyle={{ minWidth: "40rem", textAlign: "right" }}
       >
-        <Column field="name" header="ناو" style={{ width: "30%", textAlign: "right" }} />
-        <Column field="age" header="تەمەن" style={{ width: "20%", textAlign: "right" }} />
-        <Column field="phone" header="تەلەفۆن" style={{ width: "30%", textAlign: "right" }} />
-        <Column header="کار" body={actionBodyTemplate} style={{ width: "20%" }} />
+        <Column
+          field="name"
+          header="ناو"
+          style={{ width: "30%", textAlign: "right" }}
+        />
+        <Column
+          field="age"
+          header="تەمەن"
+          style={{ width: "20%", textAlign: "right" }}
+        />
+        <Column
+          field="phone"
+          header="تەلەفۆن"
+          style={{ width: "30%", textAlign: "right" }}
+        />
+        <Column
+          header="کار"
+          body={actionBodyTemplate}
+          style={{ width: "20%" }}
+        />
       </DataTable>
     </div>
   );

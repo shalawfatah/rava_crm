@@ -10,34 +10,34 @@ import { useRouter } from "next/navigation";
 
 const rabar = localFont({ src: "../components/dashboard/rabar.ttf" });
 
-const IncomeTable = () => {
-  const [income, setIncome] = useState([]);
+const ExpensesTable = () => {
+  const [expenses, setExpenses] = useState([]);
   const router = useRouter();
 
   useEffect(() => {
-    const fetchIncome = async () => {
+    const fetchExpenses = async () => {
       const { data, error } = await supabase
-        .from("income")
-        .select("id, amount, source, student_id, students(name)")
+        .from("expenses")
+        .select("id, amount, description, teacher_id, teachers(name)")
         .order("id", { ascending: false });
 
       if (!error) {
-        setIncome(data);
+        setExpenses(data);
       } else {
-        console.error("Error fetching income:", error.message);
+        console.error("Error fetching expenses:", error.message);
       }
     };
 
-    fetchIncome();
+    fetchExpenses();
   }, []);
 
   const handleDelete = async (id) => {
-    const { error } = await supabase.from("income").delete().eq("id", id);
+    const { error } = await supabase.from("expense").delete().eq("id", id);
     if (error) {
-      console.error("Error deleting income:", error.message);
+      console.error("Error deleting expense:", error.message);
     } else {
-      setIncome((prev) => prev.filter((item) => item.id !== id));
-      console.log("Income deleted:", id);
+      setExpenses((prev) => prev.filter((item) => item.id !== id));
+      console.log("Expense deleted:", id);
     }
   };
 
@@ -46,7 +46,7 @@ const IncomeTable = () => {
       <Button
         icon="pi pi-trash"
         className="p-button-danger p-button-sm"
-        tooltip="سڕینەوەی داهات"
+        tooltip="سڕینەوەی خەرجی"
         onClick={() => handleDelete(rowData.id)}
       />
     </div>
@@ -59,18 +59,18 @@ const IncomeTable = () => {
     >
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-semibold text-gray-700 text-right">
-          لیستی داهات
+          لیستی خەرجییەکان
         </h2>
         <Button
-          label="تۆمارکردنی داهات"
+          label="تۆمارکردنی خەرجی"
           icon="pi pi-plus"
           className="p-button-primary"
-          onClick={() => router.push("/income/add-income")}
+          onClick={() => router.push("/expense/add-expense")}
         />
       </div>
 
       <DataTable
-        value={income}
+        value={expenses}
         paginator
         rows={5}
         rowsPerPageOptions={[5, 10, 25, 50]}
@@ -79,17 +79,17 @@ const IncomeTable = () => {
       >
         <Column
           field="amount"
-          header="بڕی داهات"
+          header="بڕی خەرجی"
           style={{ width: "30%", textAlign: "right" }}
         />
         <Column
-          field="source"
-          header="سەرچاوەی داهات"
+          field="description"
+          header="وردەکاری"
           style={{ width: "30%", textAlign: "right" }}
         />
         <Column
-          field="students.name"
-          header="خوێندکار"
+          field="teachers.name"
+          header="مامۆستا"
           style={{ width: "30%", textAlign: "right" }}
         />
         <Column
@@ -102,4 +102,4 @@ const IncomeTable = () => {
   );
 };
 
-export default IncomeTable;
+export default ExpensesTable;

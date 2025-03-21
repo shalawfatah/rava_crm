@@ -10,40 +10,42 @@ import { useRouter } from "next/navigation";
 
 const rabar = localFont({ src: "../components/dashboard/rabar.ttf" });
 
-const TeachersTable = () => {
-  const [teachers, setTeachers] = useState([]);
+const CoursesTable = () => {
+  const [courses, setCourses] = useState([]);
   const router = useRouter();
 
   useEffect(() => {
-    const fetchTeachers = async () => {
+    const fetchCourses = async () => {
       const { data, error } = await supabase
-        .from("teachers")
-        .select("id, name, expertise");
+        .from("courses")
+        .select(
+          "id, name, price, teacher_share, discount, teacher(id, name), course_type(id, name)",
+        );
       if (!error) {
-        setTeachers(data);
+        setCourses(data);
       } else {
-        console.error("Error fetching teachers:", error.message);
+        console.error("Error fetching courses:", error.message);
       }
     };
 
-    fetchTeachers();
+    fetchCourses();
   }, []);
 
   const handleEdit = (id) => {
-    router.push(`/teacher/${id}/update`);
+    router.push(`/course/${id}/update`);
   };
 
   const handleView = (id) => {
-    router.push(`/teacher/${id}/view`);
+    router.push(`/course/${id}/view`);
   };
 
   const handleDelete = async (id) => {
-    const { error } = await supabase.from("teachers").delete().eq("id", id);
+    const { error } = await supabase.from("courses").delete().eq("id", id);
     if (error) {
-      console.error("Error deleting teacher:", error.message);
+      console.error("Error deleting course:", error.message);
     } else {
-      setTeachers((prev) => prev.filter((teacher) => teacher.id !== id));
-      console.log("Teacher deleted:", id);
+      setCourses((prev) => prev.filter((course) => course.id !== id));
+      console.log("Course deleted:", id);
     }
   };
 
@@ -53,19 +55,19 @@ const TeachersTable = () => {
         <Button
           icon="pi pi-eye"
           className="p-button-info p-button-sm"
-          tooltip="بینینی زانیاری مامۆستا"
+          tooltip="بینینی زانیاری خول"
           onClick={() => handleView(rowData.id)}
         />
         <Button
           icon="pi pi-pencil"
           className="p-button-warning p-button-sm"
-          tooltip="نوێکردنەوەی زانیاری مامۆستا"
+          tooltip="نوێکردنەوەی زانیاری خول"
           onClick={() => handleEdit(rowData.id)}
         />
         <Button
           icon="pi pi-trash"
           className="p-button-danger p-button-sm"
-          tooltip="سڕینەوەی مامۆستا"
+          tooltip="سڕینەوەی خول"
           onClick={() => handleDelete(rowData.id)}
         />
       </div>
@@ -79,41 +81,61 @@ const TeachersTable = () => {
     >
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-semibold text-gray-700 text-right">
-          لیستی مامۆستایان
+          لیستی خولەکان
         </h2>
         <Button
-          label="تۆمارکردنی مامۆستای نوێ"
+          label="تۆمارکردنی خولی نوێ"
           icon="pi pi-plus"
           className="p-button-primary"
-          onClick={() => router.push("/teacher/add-teacher")}
+          onClick={() => router.push("/course/add-course")}
         />
       </div>
       <DataTable
-        value={teachers}
+        value={courses}
         paginator
         rows={5}
         rowsPerPageOptions={[5, 10, 25, 50]}
         className="rtl-table"
-        tableStyle={{ minWidth: "40rem", textAlign: "right" }}
+        tableStyle={{ minWidth: "50rem", textAlign: "right" }}
       >
         <Column
           field="name"
           header="ناو"
-          style={{ width: "40%", textAlign: "right" }}
+          style={{ width: "20%", textAlign: "right" }}
         />
         <Column
-          field="expertise"
-          header="تخصص"
-          style={{ width: "40%", textAlign: "right" }}
+          field="price"
+          header="نرخ"
+          style={{ width: "15%", textAlign: "right" }}
+        />
+        <Column
+          field="teacher_share"
+          header="پشکی مامۆستا"
+          style={{ width: "15%", textAlign: "right" }}
+        />
+        <Column
+          field="discount"
+          header="داشکاندن"
+          style={{ width: "15%", textAlign: "right" }}
+        />
+        <Column
+          field="teacher.name"
+          header="مامۆستای خول"
+          style={{ width: "20%", textAlign: "right" }}
+        />
+        <Column
+          field="course_type.name"
+          header="جۆری خول"
+          style={{ width: "15%", textAlign: "right" }}
         />
         <Column
           header="کار"
           body={actionBodyTemplate}
-          style={{ width: "20%" }}
+          style={{ width: "15%" }}
         />
       </DataTable>
     </div>
   );
 };
 
-export default TeachersTable;
+export default CoursesTable;
