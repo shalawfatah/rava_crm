@@ -12,8 +12,9 @@ import { ProgressSpinner } from "primereact/progressspinner";
 const rabar = localFont({ src: "../../../components/dashboard/rabar.ttf" });
 
 const page = () => {
-  const { id } = useParams(); // ✅ Fix: Get params correctly
+  const { id } = useParams();
   const [student, setStudent] = useState(null);
+  const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
@@ -32,10 +33,22 @@ const page = () => {
       } else {
         setStudent(data);
       }
-      setLoading(false);
     };
 
-    fetchStudent();
+    const fetchCourses = async () => {
+      const { data, error } = await supabase
+        .from("student_courses")
+        .select("courses(name)")
+        .eq("student_id", id);
+
+      if (error) {
+        console.error("Error fetching courses:", error.message);
+      } else {
+        setCourses(data.map((item) => item.courses)); // Extract course names
+      }
+    };
+
+    Promise.all([fetchStudent(), fetchCourses()]).finally(() => setLoading(false));
   }, [id]);
 
   if (loading) {
@@ -58,20 +71,31 @@ const page = () => {
   return (
     <div className={`${rabar.className} bg-linear-65 from-purple-500 to-pink-500 min-h-screen p-6 mx-auto bg-white shadow-md rounded-md`} dir="rtl">
       <div className="max-w-2xl mx-auto">
-      <Card title="بینینی زانیاری خوێندکار">
-        <Fieldset legend="زانیاری خوێندکار">
-          <p><strong>ناو:</strong> {student.name}</p>
-          <p><strong>تەمەن:</strong> {student.age}</p>
-          <p><strong>تەلەفۆن:</strong> {student.phone}</p>
-          <p><strong>خوێندنگە:</strong> {student.school}</p>
-          <p><strong>رەگەز:</strong> {student.gender}</p>
-          <p><strong>ناونیشان:</strong> {student.address}</p>
-          <p><strong>پەیمانگا:</strong> {student.institute}</p>
-        </Fieldset>
-        <div className="mt-4 flex justify-end">
-          <Button label="گەڕانەوە" icon="pi pi-arrow-left" className="p-button-secondary" onClick={() => router.back()} />
-        </div>
-      </Card>
+        <Card title="بینینی زانیاری خوێندکار">
+          <Fieldset legend="زانیاری خوێندکار">
+            <p><strong>ناو:</strong> {student.name}</p>
+            <p><strong>تەمەن:</strong> {student.age}</p>
+            <p><strong>تەلەفۆن:</strong> {student.phone}</p>
+            <p><strong>خوێندنگە:</strong> {student.school}</p>
+            <p><strong>رەگەز:</strong> {student.gender}</p>
+            <p><strong>ناونیشان:</strong> {student.address}</p>
+            <p><strong>پەیمانگا:</strong> {student.institute}</p>
+          </Fieldset>
+          <Fieldset legend="خولی بەشداربوو" className="mt-4">
+            {courses.length > 0 ? (
+              <ul>
+                {courses.map((course, index) => (
+                  <li key={index} className="mt-2">{course.name}</li>
+                ))}
+              </ul>
+            ) : (
+              <p>هیچ خوڵێک بەشدار نەبووە</p>
+            )}
+          </Fieldset>
+          <div className="mt-4 flex justify-end">
+            <Button label="گەڕانەوە" icon="pi pi-arrow-left" className="p-button-secondary" onClick={() => router.back()} />
+          </div>
+        </Card>
       </div>
     </div>
   );

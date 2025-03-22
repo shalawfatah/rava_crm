@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { Button } from "primereact/button";
+import { ConfirmDialog, confirmDialog } from "primereact/confirmdialog";
 import { supabase } from "@/app/utils/supabase/client";
 import localFont from "next/font/local";
 import { useRouter } from "next/navigation";
@@ -41,13 +42,42 @@ const IncomeTable = () => {
     }
   };
 
+  const confirmDelete = (id) => {
+    confirmDialog({
+      message: "دەتەوێت ئەم داهاتە بسڕیتەوە؟",
+      header: "سڕینەوەی داهات",
+      icon: "pi pi-exclamation-triangle",
+      acceptClassName: "p-button-danger",
+      acceptLabel: "بەڵێ",
+      rejectLabel: "نەخێر",
+      accept: () => handleDelete(id),
+    });
+  };
+
   const actionBodyTemplate = (rowData) => (
     <div className="flex gap-2 justify-start">
       <Button
+        icon="pi pi-eye"
+        className="p-button-info p-button-sm"
+        tooltip="بینین"
+        onClick={() => router.push(`/income/${rowData.id}/view`)}
+      />
+      <Button
+        icon="pi pi-pencil"
+        className="p-button-warning p-button-sm"
+        tooltip="نوێکردنەوە"
+        onClick={() => router.push(`/income/${rowData.id}/update`)}
+      />
+      <Button
+        icon="pi pi-print"
+        className="p-button-secondary p-button-sm"
+        tooltip="پسوڵە"
+      />
+      <Button
         icon="pi pi-trash"
         className="p-button-danger p-button-sm"
-        tooltip="سڕینەوەی داهات"
-        onClick={() => handleDelete(rowData.id)}
+        tooltip="سڕینەوە"
+        onClick={() => confirmDelete(rowData.id)}
       />
     </div>
   );
@@ -57,6 +87,7 @@ const IncomeTable = () => {
       className={`${rabar.className} p-4 bg-white shadow-md bg-linear-65 from-blue-500 to-green-500 min-h-screen`}
       dir="rtl"
     >
+      <ConfirmDialog />
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-semibold text-gray-700 text-right">
           لیستی داهات

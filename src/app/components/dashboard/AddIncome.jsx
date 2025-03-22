@@ -1,120 +1,186 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { InputText } from "primereact/inputtext";
-import { Button } from "primereact/button";
-import { Dropdown } from "primereact/dropdown";
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/app/utils/supabase/client";
 import localFont from "next/font/local";
+import { Card } from "primereact/card";
+import { Fieldset } from "primereact/fieldset";
+import { Button } from "primereact/button";
+import { InputText } from "primereact/inputtext";
+import { InputNumber } from "primereact/inputnumber";
+import { Dropdown } from "primereact/dropdown";
+import { RadioButton } from "primereact/radiobutton";
+import { ProgressSpinner } from "primereact/progressspinner";
+import { Toast } from "primereact/toast";
+import { useRef } from "react";
 
-const rabar = localFont({ src: "./rabar.ttf" });
+const rabar = localFont({ src: "../../../components/dashboard/rabar.ttf" });
 
 const AddIncome = () => {
-  const [form, setForm] = useState({
-    student_id: null,
-    amount: "",
-    source: "",
-  });
-  const [loading, setLoading] = useState(false);
+  const [amount, setAmount] = useState(null);
+  const [source, setSource] = useState("");
+  const [note, setNote] = useState("");
+  const [studentId, setStudentId] = useState(null);
   const [students, setStudents] = useState([]);
+  const [showInstallments, setShowInstallments] = useState("no");
+  const [installments, setInstallments] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+  const toast = useRef(null);
 
   useEffect(() => {
     const fetchStudents = async () => {
-      const { data, error } = await supabase
-        .from("students")
-        .select("id, name");
-      if (!error) setStudents(data || []);
+      const { data, error } = await supabase.from("students").select("id, name");
+      if (error) {
+        console.error("Error fetching students:", error.message);
+      } else {
+        setStudents(data);
+      }
     };
     fetchStudents();
   }, []);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-
-    setForm((prev) => ({
-      ...prev,
-      [name]: value === null ? "" : value,
-      ...(name === "source" ? { student_id: null } : {}), // Set student_id to null when typing in source
-    }));
+  const addInstallment = () => {
+    setInstallments([...installments, { inst_amount: null }]);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const updateInstallmentAmount = (index, value) => {
+    const updatedInstallments = [...installments];
+    updatedInstallments[index].inst_amount = value;
+    setInstallments(updatedInstallments);
+  };
+
+  const handleSubmit = async () => {
     setLoading(true);
 
-    // Ensure correct data structure
-    const incomeData = {
-      student_id: form.student_id || null,
-      amount: parseInt(form.amount) || 0,
-      source: form.student_id ? null : form.source.trim() || null,
-    };
+    // Step 1: Insert the income record
+    const { data: incomeData, error: incomeError } = await supabase
+      .from("income")
+      .insert([{ amount, source, note, student_id: studentId || null }])
+      .select()
+      .single();
 
-    // **Fix: Prevent submission if both student_id and source are null**
-    if (!incomeData.student_id && !incomeData.source) {
-      console.error("Error: Either student_id or source must be provided.");
+    if (incomeError) {
+      console.error("Error adding income:", incomeError.message);
+      toast.current.show({ severity: "error", summary: "هەڵە!", detail: "نەتوانرا داهات زیاد بکرێت", life: 3000 });
       setLoading(false);
       return;
     }
 
-    const { data, error } = await supabase.from("income").insert([incomeData]);
-    if (error) {
-      console.error("Error inserting income:", error.message);
-    } else {
-      console.log("Income registered:", data);
-      setForm({ student_id: null, amount: "", source: "" }); // Reset form
+    const incomeId = incomeData.id;
+
+    // Step 2: Insert installments if enabled
+    if (showInstallments === "yes" && installments.length > 0) {
+      const installmentRecords = installments.map(inst => ({
+        inst_amount: inst.inst_amount,
+        income: incomeId,
+      }));
+
+      const { error: installmentError } = await supabase.from("installments").insert(installmentRecords);
+
+      if (installmentError) {
+        console.error("Error adding installments:", installmentError.message);
+        toast.current.show({ severity: "error", summary: "هەڵە!", detail: "نەتوانرا قیستەکان زیاد بکرێن", life: 3000 });
+        setLoading(false);
+        return;
+      }
     }
+
+    toast.current.show({ severity: "success", summary: "سەرکەوتو!", detail: "داهات زیاد کرا", life: 3000 });
     setLoading(false);
+    router.back();
   };
 
   return (
-    <div
-      dir="rtl"
-      className={`${rabar.className} my-12 max-w-md mx-auto p-6 bg-white shadow-md rounded-lg`}
-    >
-      <h2 className="text-xl font-semibold mb-4">تۆمارکردنی داهات</h2>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <Dropdown
-          name="student_id"
-          value={form.student_id}
-          options={[
-            { label: "None", value: null },
-            ...students.map((s) => ({ label: s.name, value: s.id })),
-          ]}
-          onChange={(e) =>
-            setForm((prev) => ({
-              ...prev,
-              student_id: e.value,
-              source: e.value ? "" : prev.source, // Clear source when selecting a student
-            }))
-          }
-          placeholder="پارەی خوێندکار"
-          className="w-full"
-        />
-        <InputText
-          name="amount"
-          value={form.amount}
-          onChange={handleChange}
-          placeholder="بڕی پارە"
-          type="number"
-          className="p-inputtext-lg w-full"
-        />
-        {!form.student_id && (
-          <InputText
-            name="source"
-            value={form.source}
-            onChange={handleChange}
-            placeholder="سەرچاوەی داهات"
-            className="p-inputtext-lg w-full"
-          />
-        )}
-        <Button
-          label="تۆمارکردنی داهات"
-          icon="pi pi-check"
-          type="submit"
-          loading={loading}
-          className="p-button-success w-full"
-        />
-      </form>
+    <div className={`${rabar.className} bg-white min-h-screen p-6 mx-auto shadow-md rounded-md`} dir="rtl">
+      <Toast ref={toast} />
+      <div className="max-w-2xl mx-auto">
+        <Card title="زیادکردنی داهات">
+          <Fieldset legend="زانیاری داهات">
+            <div className="mb-4">
+              <label className="block font-semibold mb-1">بڕ</label>
+              <InputNumber value={amount} onValueChange={(e) => setAmount(e.value)} className="w-full" />
+            </div>
+
+            <div className="mb-4">
+              <label className="block font-semibold mb-1">سەرچاوە</label>
+              <InputText value={source} onChange={(e) => setSource(e.target.value)} className="w-full" />
+            </div>
+
+            <div className="mb-4">
+              <label className="block font-semibold mb-1">تێبینی</label>
+              <InputText value={note} onChange={(e) => setNote(e.target.value)} className="w-full" />
+            </div>
+
+            <div className="mb-4">
+              <label className="block font-semibold mb-1">خوێندکار (هەبێت یان نەبێت)</label>
+              <Dropdown
+                value={studentId}
+                options={students}
+                onChange={(e) => setStudentId(e.value)}
+                optionLabel="name"
+                optionValue="id"
+                placeholder="خوێندکارێک دیاری بکە"
+                className="w-full"
+              />
+            </div>
+          </Fieldset>
+
+          <Fieldset legend="قیستەکان" className="mt-4">
+            <div className="flex gap-4 items-center">
+              <RadioButton
+                inputId="yes"
+                name="installments"
+                value="yes"
+                onChange={(e) => setShowInstallments(e.value)}
+                checked={showInstallments === "yes"}
+              />
+              <label htmlFor="yes">بە قیست</label>
+
+              <RadioButton
+                inputId="no"
+                name="installments"
+                value="no"
+                onChange={(e) => setShowInstallments(e.value)}
+                checked={showInstallments === "no"}
+              />
+              <label htmlFor="no">نەبێت</label>
+            </div>
+
+            {showInstallments === "yes" && (
+              <>
+                {installments.map((inst, index) => (
+                  <div key={index} className="mt-4 flex gap-2 items-center">
+                    <InputNumber
+                      value={inst.inst_amount}
+                      onValueChange={(e) => updateInstallmentAmount(index, e.value)}
+                      className="w-full"
+                    />
+                  </div>
+                ))}
+                <Button label="زیادکردنی قیست" className="p-button-sm p-button-outlined mt-3" onClick={addInstallment} />
+              </>
+            )}
+          </Fieldset>
+
+          <div className="mt-4 flex justify-end">
+            <Button
+              label="زیادکردن"
+              icon="pi pi-check"
+              className="p-button-success"
+              onClick={handleSubmit}
+              disabled={loading}
+            />
+            <Button
+              label="گەڕاندنەوە"
+              icon="pi pi-arrow-left"
+              className="p-button-secondary ml-2"
+              onClick={() => router.back()}
+            />
+          </div>
+        </Card>
+      </div>
     </div>
   );
 };

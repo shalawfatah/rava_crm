@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { Button } from "primereact/button";
+import { Dialog } from "primereact/dialog";
 import { supabase } from "@/app/utils/supabase/client";
 import localFont from "next/font/local";
 import { useRouter } from "next/navigation";
@@ -12,6 +13,8 @@ const rabar = localFont({ src: "../components/dashboard/rabar.ttf" });
 
 const StudentsTable = () => {
   const [students, setStudents] = useState([]);
+  const [deleteId, setDeleteId] = useState(null);
+  const [isDialogVisible, setIsDialogVisible] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -37,15 +40,25 @@ const StudentsTable = () => {
     router.push(`/student/${id}/view`);
   };
 
-  const handleDelete = async (id) => {
-    const { error } = await supabase.from("students").delete().eq("id", id);
-    if (error) {
-      console.error("Error deleting student:", error.message);
-    } else {
-      setStudents((prev) => prev.filter((student) => student.id !== id));
-      console.log("Student deleted:", id);
-    }
+  const confirmDelete = (id) => {
+    setDeleteId(id);
+    setIsDialogVisible(true);
   };
+
+  const handleDelete = async () => {
+    if (deleteId) {
+      const { error } = await supabase.from("students").delete().eq("id", deleteId);
+      if (error) {
+        console.error("Error deleting student:", error.message);
+      } else {
+        setStudents((prev) => prev.filter((student) => student.id !== deleteId));
+        console.log("Student deleted:", deleteId);
+      }
+    }
+    setIsDialogVisible(false);
+    setDeleteId(null);
+  };
+
   const actionBodyTemplate = (rowData) => {
     return (
       <div className="flex gap-2 justify-start ">
@@ -65,7 +78,7 @@ const StudentsTable = () => {
           icon="pi pi-trash"
           className="p-button-danger p-button-sm"
           tooltip="سڕینەوەی پرۆفایلی خوێندکار"
-          onClick={() => handleDelete(rowData.id)}
+          onClick={() => confirmDelete(rowData.id)}
         />
       </div>
     );
@@ -116,6 +129,20 @@ const StudentsTable = () => {
           style={{ width: "20%" }}
         />
       </DataTable>
+      {/* Confirmation Dialog */}
+      <Dialog
+        visible={isDialogVisible}
+        onHide={() => setIsDialogVisible(false)}
+        header="دڵنیای؟"
+        footer={
+          <div>
+            <Button label="نەخێر" onClick={() => setIsDialogVisible(false)} className="p-button-text" />
+            <Button label="بەڵێ" onClick={handleDelete} className="p-button-danger" />
+          </div>
+        }
+      >
+        <p>ئایە دڵنیایت لە سڕینەوەی ئەم خوێندکارە؟</p>
+      </Dialog>
     </div>
   );
 };

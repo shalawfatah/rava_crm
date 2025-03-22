@@ -21,10 +21,10 @@ const page = () => {
     school: "",
     gender: "",
     address: "",
-    courses: [], // This will store course IDs related to the student
   });
   const [loading, setLoading] = useState(false);
-  const [courses, setCourses] = useState([]); // All available courses
+  const [selectedCourses, setSelectedCourses] = useState([]);
+  const [courses, setCourses] = useState([]);
 
   useEffect(() => {
     if (!id) return;
@@ -48,14 +48,11 @@ const page = () => {
 
         if (studentCoursesError) throw studentCoursesError;
 
-        // Extract course IDs
         const studentCourseIds = studentCourses.map((sc) => sc.course_id);
-
-        // Update form state
+        setSelectedCourses(studentCourseIds);
         setForm({
           ...student,
           age: student.age ? String(student.age) : "",
-          courses: studentCourseIds, // Set selected course IDs
         });
 
         // Fetch all available courses
@@ -85,12 +82,9 @@ const page = () => {
   };
 
   const handleCourseSelect = (courseId) => {
-    setForm((prev) => ({
-      ...prev,
-      courses: prev.courses.includes(courseId)
-        ? prev.courses.filter((id) => id !== courseId)
-        : [...prev.courses, courseId],
-    }));
+    setSelectedCourses((prev) =>
+      prev.includes(courseId) ? prev.filter((id) => id !== courseId) : [...prev, courseId]
+    );
   };
 
   const handleSubmit = async (e) => {
@@ -99,26 +93,19 @@ const page = () => {
 
     try {
       const studentData = { ...form, age: parseInt(form.age, 10) || null };
-
-      // Update student data
-      const { error: updateError } = await supabase
-        .from("students")
-        .update(studentData)
-        .eq("id", id);
-
-      if (updateError) throw updateError;
+      await supabase.from("students").update(studentData).eq("id", id);
 
       // Update student courses
       await supabase.from("student_courses").delete().eq("student_id", id);
-      if (form.courses.length > 0) {
-        const newStudentCourses = form.courses.map((courseId) => ({
+      if (selectedCourses.length > 0) {
+        const newStudentCourses = selectedCourses.map((courseId) => ({
           student_id: id,
           course_id: courseId,
         }));
         await supabase.from("student_courses").insert(newStudentCourses);
       }
 
-      router.push("/students");
+      router.push("/student");
     } catch (error) {
       console.error("Error updating student:", error.message);
     }
@@ -133,42 +120,11 @@ const page = () => {
     >
       <h2 className="text-xl font-semibold mb-4 text-gray-700">نوێکردنەوەی زانیاری خوێندکار</h2>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <InputText
-          name="name"
-          value={form.name}
-          onChange={handleChange}
-          placeholder="ناو"
-          className="p-inputtext-lg w-full"
-        />
-        <InputText
-          name="age"
-          value={form.age}
-          onChange={handleChange}
-          placeholder="تەمەن"
-          type="number"
-          className="p-inputtext-lg w-full"
-        />
-        <InputText
-          name="phone"
-          value={form.phone || ""}
-          onChange={handleChange}
-          placeholder="ژمارەی تەلەفۆن"
-          className="p-inputtext-lg w-full"
-        />
-        <InputText
-          name="school"
-          value={form.school || ""}
-          onChange={handleChange}
-          placeholder="خوێندنگە"
-          className="p-inputtext-lg w-full"
-        />
-        <InputText
-          name="address"
-          value={form.address || ""}
-          onChange={handleChange}
-          placeholder="ناونیشان"
-          className="p-inputtext-lg w-full"
-        />
+        <InputText name="name" value={form.name} onChange={handleChange} placeholder="ناو" className="p-inputtext-lg w-full" />
+        <InputText name="age" value={form.age} onChange={handleChange} placeholder="تەمەن" type="number" className="p-inputtext-lg w-full" />
+        <InputText name="phone" value={form.phone || ""} onChange={handleChange} placeholder="ژمارەی تەلەفۆن" className="p-inputtext-lg w-full" />
+        <InputText name="school" value={form.school || ""} onChange={handleChange} placeholder="خوێندنگە" className="p-inputtext-lg w-full" />
+        <InputText name="address" value={form.address || ""} onChange={handleChange} placeholder="ناونیشان" className="p-inputtext-lg w-full" />
         <Dropdown
           value={form.gender || ""}
           options={genders}
@@ -187,21 +143,15 @@ const page = () => {
                 inputId={course.id}
                 value={course.id}
                 onChange={() => handleCourseSelect(course.id)}
-                checked={form.courses.includes(course.id)}
+                checked={selectedCourses.includes(course.id)}
               />
               <label htmlFor={course.id} className="text-gray-700">
-                {`${course.name} - ${course.price} IQD - ${course.teachers.name} - ${course.course_type.name} - داشکاندن: %${course.discount}`}
+                {`${course.name} - ${course.price} IQD - ${course.teachers?.name} - ${course.course_type.name} - داشکاندن: %${course.discount}`}
               </label>
             </div>
           ))}
         </div>
-        <Button
-          label="نوێکردنەوە"
-          icon="pi pi-check"
-          type="submit"
-          loading={loading}
-          className="p-button-primary w-full"
-        />
+        <Button label="نوێکردنەوە" icon="pi pi-check" type="submit" loading={loading} className="p-button-primary w-full" />
       </form>
     </div>
   );

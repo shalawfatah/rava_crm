@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { Button } from "primereact/button";
+import { Dialog } from "primereact/dialog";
 import { supabase } from "@/app/utils/supabase/client";
 import localFont from "next/font/local";
 import { useRouter } from "next/navigation";
@@ -12,6 +13,7 @@ const rabar = localFont({ src: "../components/dashboard/rabar.ttf" });
 
 const TeachersTable = () => {
   const [teachers, setTeachers] = useState([]);
+  const [deleteTeacher, setDeleteTeacher] = useState(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -29,22 +31,23 @@ const TeachersTable = () => {
     fetchTeachers();
   }, []);
 
-  const handleEdit = (id) => {
-    router.push(`/teacher/${id}/update`);
+  const confirmDelete = (teacher) => {
+    setDeleteTeacher(teacher);
   };
 
-  const handleView = (id) => {
-    router.push(`/teacher/${id}/view`);
-  };
-
-  const handleDelete = async (id) => {
-    const { error } = await supabase.from("teachers").delete().eq("id", id);
+  const handleDelete = async () => {
+    if (!deleteTeacher) return;
+    const { error } = await supabase
+      .from("teachers")
+      .delete()
+      .eq("id", deleteTeacher.id);
     if (error) {
       console.error("Error deleting teacher:", error.message);
     } else {
-      setTeachers((prev) => prev.filter((teacher) => teacher.id !== id));
-      console.log("Teacher deleted:", id);
+      setTeachers((prev) => prev.filter((t) => t.id !== deleteTeacher.id));
+      console.log("Teacher deleted:", deleteTeacher.id);
     }
+    setDeleteTeacher(null);
   };
 
   const actionBodyTemplate = (rowData) => {
@@ -54,19 +57,19 @@ const TeachersTable = () => {
           icon="pi pi-eye"
           className="p-button-info p-button-sm"
           tooltip="بینینی زانیاری مامۆستا"
-          onClick={() => handleView(rowData.id)}
+          onClick={() => router.push(`/teacher/${rowData.id}/view`)}
         />
         <Button
           icon="pi pi-pencil"
           className="p-button-warning p-button-sm"
           tooltip="نوێکردنەوەی زانیاری مامۆستا"
-          onClick={() => handleEdit(rowData.id)}
+          onClick={() => router.push(`/teacher/${rowData.id}/update`)}
         />
         <Button
           icon="pi pi-trash"
           className="p-button-danger p-button-sm"
           tooltip="سڕینەوەی مامۆستا"
-          onClick={() => handleDelete(rowData.id)}
+          onClick={() => confirmDelete(rowData)}
         />
       </div>
     );
@@ -103,7 +106,7 @@ const TeachersTable = () => {
         />
         <Column
           field="expertise"
-          header="تخصص"
+          header="پسپۆڕیی"
           style={{ width: "40%", textAlign: "right" }}
         />
         <Column
@@ -112,6 +115,22 @@ const TeachersTable = () => {
           style={{ width: "20%" }}
         />
       </DataTable>
+      {/* Confirmation Dialog */}
+      <Dialog
+        visible={!!deleteTeacher}
+        onHide={() => setDeleteTeacher(null)}
+        header="سڕینەوەی مامۆستا"
+        footer={
+          <div>
+            <Button label="پاشگەزبوونەوە" onClick={() => setDeleteTeacher(null)} className="p-button-text" />
+            <Button label="سڕینەوە" onClick={handleDelete} className="p-button-danger" autoFocus />
+          </div>
+        }
+      >
+        {deleteTeacher && (
+          <p>دەتەوێت مامۆستا {deleteTeacher.name} بسڕیتەوە؟</p>
+        )}
+      </Dialog>
     </div>
   );
 };
