@@ -18,25 +18,34 @@ export default function AddCourse() {
     teacher: null,
     teacher_share: null,
     discount: null,
+    cohort: null,
   });
   const [courseTypes, setCourseTypes] = useState([]);
   const [teachers, setTeachers] = useState([]);
+  const [cohorts, setCohorts] = useState([]);
   const [message, setMessage] = useState(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
-      const [{ data: courseData, error: courseError }, { data: teacherData, error: teacherError }] =
-        await Promise.all([
-          supabase.from("course_type").select("id, name"),
-          supabase.from("teachers").select("id, name"),
-        ]);
+      const [
+        { data: courseData, error: courseError },
+        { data: teacherData, error: teacherError },
+        { data: cohortData, error: cohortError }
+      ] = await Promise.all([
+        supabase.from("course_type").select("id, name"),
+        supabase.from("teachers").select("id, name"),
+        supabase.from("cohort").select("id, name"),
+      ]);
 
       if (courseError) console.error("Error fetching course types:", courseError);
       else setCourseTypes(courseData);
 
       if (teacherError) console.error("Error fetching teachers:", teacherError);
       else setTeachers(teacherData);
+
+      if (cohortError) console.error("Error fetching cohorts:", cohortError);
+      else setCohorts(cohortData);
     }
 
     fetchData();
@@ -58,7 +67,7 @@ export default function AddCourse() {
       setMessage({ type: "error", text: "هەڵەیەک ڕویدا: " + error.message });
     } else {
       setMessage({ type: "success", text: "خولەکە بە سەرکەوتوویی تۆمارکرا!" });
-      setFormData({ name: "", price: null, course_type: null, teacher: null, teacher_share: null, discount: null });
+      setFormData({ name: "", price: null, course_type: null, teacher: null, teacher_share: null, discount: null, cohort: null });
     }
   };
 
@@ -97,6 +106,19 @@ export default function AddCourse() {
             optionLabel="name"
             optionValue="id"
             placeholder="مامۆستا هەڵبژێرە"
+            className="w-full"
+            required
+          />
+        </div>
+        <div>
+          <label className="block mb-1 text-gray-700">گروپ</label>
+          <Dropdown
+            value={formData.cohort}
+            options={cohorts}
+            onChange={(e) => handleChange(e, "cohort")}
+            optionLabel="name"
+            optionValue="id"
+            placeholder="گروپ هەڵبژێرە"
             className="w-full"
             required
           />

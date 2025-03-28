@@ -7,6 +7,7 @@ import { Button } from "primereact/button";
 import { supabase } from "@/app/utils/supabase/client";
 import localFont from "next/font/local";
 import { useRouter } from "next/navigation";
+import { ConfirmDialog, confirmDialog } from "primereact/confirmdialog";
 
 const rabar = localFont({ src: "../components/dashboard/rabar.ttf" });
 
@@ -19,7 +20,7 @@ const CoursesTable = () => {
       const { data, error } = await supabase
         .from("courses")
         .select(
-          "id, name, price, teacher_share, discount, teacher(id, name), course_type(id, name)",
+          "id, name, price, teacher_share, discount, teacher(id, name), course_type(id, name), cohort(id, name)",
         );
       if (!error) {
         setCourses(data);
@@ -39,14 +40,24 @@ const CoursesTable = () => {
     router.push(`/course/${id}/view`);
   };
 
-  const handleDelete = async (id) => {
-    const { error } = await supabase.from("courses").delete().eq("id", id);
-    if (error) {
-      console.error("Error deleting course:", error.message);
-    } else {
-      setCourses((prev) => prev.filter((course) => course.id !== id));
-      console.log("Course deleted:", id);
-    }
+  const handleDelete = (id) => {
+    confirmDialog({
+      message: "دەتەوێت ئەم خولە بسڕیتەوە؟",
+      header: "سڕینەوەی خول",
+      icon: "pi pi-exclamation-triangle",
+      acceptClassName: "p-button-danger",
+      acceptLabel: "بەڵێ",
+      rejectLabel: "نەخێر",
+      accept: async () => {
+        const { error } = await supabase.from("courses").delete().eq("id", id);
+        if (error) {
+          console.error("Error deleting course:", error.message);
+        } else {
+          setCourses((prev) => prev.filter((course) => course.id !== id));
+          console.log("Course deleted:", id);
+        }
+      },
+    });
   };
 
   const actionBodyTemplate = (rowData) => {
@@ -79,6 +90,7 @@ const CoursesTable = () => {
       className={`${rabar.className} p-4 bg-white shadow-md bg-linear-65 from-blue-500 to-green-500 min-h-screen`}
       dir="rtl"
     >
+      <ConfirmDialog />
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-semibold text-gray-700 text-right">
           لیستی خولەکان
@@ -128,6 +140,12 @@ const CoursesTable = () => {
           header="جۆری خول"
           style={{ width: "15%", textAlign: "right" }}
         />
+        <Column
+          field="cohort.name"
+          header="گروپ"
+          style={{ width: "15%", textAlign: "right" }}
+        />
+
         <Column
           header="کار"
           body={actionBodyTemplate}

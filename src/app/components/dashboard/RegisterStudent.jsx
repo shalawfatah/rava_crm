@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { InputText } from "primereact/inputtext";
 import { Button } from "primereact/button";
 import { Checkbox } from "primereact/checkbox";
@@ -11,6 +12,7 @@ import localFont from "next/font/local";
 const rabar = localFont({ src: "./rabar.ttf" });
 
 const RegisterStudent = () => {
+  const router = useRouter(); // Initialize router
   const [form, setForm] = useState({
     name: "",
     age: "",
@@ -60,7 +62,7 @@ const RegisterStudent = () => {
     e.preventDefault();
     setLoading(true);
 
-    const studentData = { 
+    const studentData = {
       name: form.name,
       age: parseInt(form.age, 10) || null,
       phone: form.phone,
@@ -69,25 +71,31 @@ const RegisterStudent = () => {
       address: form.address,
     };
 
-    const { data: student, error } = await supabase.from("students").insert([studentData]).select("id").single();
-    
+    const { data: student, error } = await supabase
+      .from("students")
+      .insert([studentData])
+      .select("id")
+      .single();
+
     if (error) {
       console.error("Error inserting student:", error.message);
     } else {
       console.log("Student registered:", student);
-      
+
       if (student.id && form.courses.length > 0) {
         const studentCourses = form.courses.map((courseId) => ({
           student_id: student.id,
           course_id: courseId,
         }));
 
-        const { error: courseError } = await supabase.from("student_courses").insert(studentCourses);
+        const { error: courseError } = await supabase
+          .from("student_courses")
+          .insert(studentCourses);
         if (courseError) {
           console.error("Error inserting student courses:", courseError.message);
         }
       }
-      
+
       setForm({
         name: "",
         age: "",
@@ -97,7 +105,10 @@ const RegisterStudent = () => {
         address: "",
         courses: [],
       });
+
+      router.push("/student"); // Redirect after successful registration
     }
+
     setLoading(false);
   };
 
@@ -117,7 +128,7 @@ const RegisterStudent = () => {
             <div key={course.id} className="flex items-center gap-2">
               <Checkbox inputId={course.id} value={course.id} onChange={() => handleCourseSelect(course.id)} checked={form.courses.includes(course.id)} />
               <label htmlFor={course.id} className="text-gray-700">
-                {`${course.name} - ${course.price} IQD - ${course.teachers.name} - ${course.course_type.name} - داشکاندن: %${course.discount}`}
+                {`${course.name} - ${course.price} IQD - ${course.teachers?.name} - ${course.course_type.name} - داشکاندن: %${course.discount}`}
               </label>
             </div>
           ))}
