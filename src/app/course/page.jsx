@@ -20,7 +20,7 @@ const CoursesTable = () => {
       const { data, error } = await supabase
         .from("courses")
         .select(
-          "id, name, price, teacher_share, discount, teacher(id, name), course_type(id, name), cohort(id, name)",
+          "id, course_name(*), price, teacher_share, discount, teacher(id, name), course_type(id, name), cohort(id, name)",
         );
       if (!error) {
         setCourses(data);
@@ -111,7 +111,7 @@ const CoursesTable = () => {
         tableStyle={{ minWidth: "50rem", textAlign: "right" }}
       >
         <Column
-          field="name"
+          field="course_name.name"
           header="ناو"
           style={{ width: "20%", textAlign: "right" }}
         />
