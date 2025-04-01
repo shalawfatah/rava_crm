@@ -123,11 +123,13 @@ const CoursesTable = () => {
         <Column
           field="teacher_share"
           header="پشکی مامۆستا"
+          body={(rowData) => `${rowData.teacher_share}%`}
           style={{ width: "15%", textAlign: "right" }}
         />
         <Column
           field="discount"
           header="داشکاندن"
+          body={(rowData) => `${rowData.discount}%`}
           style={{ width: "15%", textAlign: "right" }}
         />
         <Column

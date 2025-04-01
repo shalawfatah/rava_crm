@@ -29,7 +29,7 @@ const OtherIncome = ({ visible, onHide, onSuccess }) => {
 
   return (
     <Dialog header="تۆمارکردنی داهات" visible={visible} onHide={onHide} modal>
-      <div className="flex flex-col gap-4 p-4">
+      <div dir="rtl" className="flex flex-col gap-4 p-4">
         <label className="block">بڕ</label>
         <InputText
           name="amount"

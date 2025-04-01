@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { InputText } from "primereact/inputtext";
 import { Button } from "primereact/button";
+import { Dropdown } from "primereact/dropdown";
 import { supabase } from "@/app/utils/supabase/client";
 import localFont from "next/font/local";
 
@@ -14,27 +15,40 @@ const UpdateTeacherPage = () => {
   const router = useRouter();
   const [form, setForm] = useState({ name: "", expertise: "" });
   const [loading, setLoading] = useState(false);
+  const [courses, setCourses] = useState([]);
 
   useEffect(() => {
-    if (!id) return;
+    async function fetchData() {
+      if (!id) return;
 
-    async function fetchTeacherData() {
       try {
-        const { data: teacher, error } = await supabase
+        // Fetch teacher data
+        const { data: teacher, error: teacherError } = await supabase
           .from("teachers")
-          .select("name, expertise")
+          .select("name, expertise, course_name(name, id)")
           .eq("id", id)
           .single();
 
-        if (error) throw error;
+        if (teacherError) throw teacherError;
 
-        setForm(teacher);
+        setForm({
+          name: teacher.name,
+          expertise: teacher.course_name?.id || "",
+        });
+
+        // Fetch courses
+        const { data: courseList, error: courseError } = await supabase
+          .from("course_name")
+          .select("id, name");
+
+        if (courseError) throw courseError;
+        setCourses(courseList);
       } catch (error) {
-        console.error("Error fetching teacher data:", error.message);
+        console.error("Error fetching data:", error.message);
       }
     }
 
-    fetchTeacherData();
+    fetchData();
   }, [id]);
 
   const handleChange = (e) => {
@@ -49,7 +63,10 @@ const UpdateTeacherPage = () => {
     try {
       const { error } = await supabase
         .from("teachers")
-        .update(form)
+        .update({
+          name: form.name,
+          expertise: form.expertise,
+        })
         .eq("id", id);
 
       if (error) throw error;
@@ -78,12 +95,16 @@ const UpdateTeacherPage = () => {
           placeholder="ناو"
           className="p-inputtext-lg w-full"
         />
-        <InputText
+        <Dropdown
           name="expertise"
           value={form.expertise}
-          onChange={handleChange}
+          options={courses.map((course) => ({
+            label: course.name,
+            value: course.id,
+          }))}
+          onChange={(e) => setForm((prev) => ({ ...prev, expertise: e.value }))}
           placeholder="پسپۆری"
-          className="p-inputtext-lg w-full"
+          className="w-full"
         />
         <Button
           label="نوێکردنەوە"

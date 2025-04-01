@@ -20,7 +20,7 @@ const TeachersTable = () => {
     const fetchTeachers = async () => {
       const { data, error } = await supabase
         .from("teachers")
-        .select("id, name, expertise");
+        .select("id, name, course_name(*)");
       if (!error) {
         setTeachers(data);
       } else {
@@ -105,7 +105,7 @@ const TeachersTable = () => {
           style={{ width: "40%", textAlign: "right" }}
         />
         <Column
-          field="expertise"
+          field="course_name.name"
           header="پسپۆڕیی"
           style={{ width: "40%", textAlign: "right" }}
         />

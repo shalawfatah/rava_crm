@@ -23,7 +23,7 @@ const ViewTeacher = () => {
     const fetchTeacher = async () => {
       const { data, error } = await supabase
         .from("teachers")
-        .select("name, expertise")
+        .select("name, course_name(*)")
         .eq("id", id)
         .single();
 
@@ -54,14 +54,13 @@ const ViewTeacher = () => {
       </div>
     );
   }
-
   return (
     <div className={`${rabar.className} bg-white min-h-screen p-6 mx-auto shadow-md rounded-md`} dir="rtl">
       <div className="max-w-2xl mx-auto">
         <Card title="بینینی زانیاری مامۆستا">
           <Fieldset legend="زانیاری مامۆستا">
             <p><strong>ناو:</strong> {teacher.name}</p>
-            <p><strong>تایبەتمەندی:</strong> {teacher.expertise}</p>
+            <p><strong>تایبەتمەندی:</strong> {teacher.course_name?.name}</p>
           </Fieldset>
           <div className="mt-4 flex justify-end">
             <Button label="گەڕاندنەوە" icon="pi pi-arrow-left" className="p-button-secondary" onClick={() => router.back()} />

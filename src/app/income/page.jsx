@@ -133,6 +133,7 @@ const IncomeTable = () => {
           field="amount"
           header="بڕی داهات"
           style={{ width: "30%", textAlign: "right" }}
+          body={(rowData) => `${rowData.amount.toLocaleString()} د.ع`}
         />
         <Column
           field="source"

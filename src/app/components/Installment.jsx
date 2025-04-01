@@ -17,7 +17,7 @@ const InstallmentDialog = ({ visible, onHide }) => {
 
   useEffect(() => {
     const fetchStudents = async () => {
-      const { data, error } = await supabase.from("students").select("id, name");
+      const {data, error} = await supabase.rpc("get_enrolled_students");
       if (error) console.error("Error fetching students:", error);
       else setStudents(data);
     };
@@ -61,7 +61,10 @@ const InstallmentDialog = ({ visible, onHide }) => {
 
   useEffect(() => {
     if (incomeAmount) {
-      const totalInstallments = installments.reduce((sum, inst) => sum + inst.inst_amount, 0);
+      const totalInstallments = installments.reduce(
+        (sum, inst) => sum + inst.inst_amount,
+        0,
+      );
       setRemainingBalance(incomeAmount.amount - totalInstallments);
     }
   }, [installments, incomeAmount]);
@@ -85,7 +88,14 @@ const InstallmentDialog = ({ visible, onHide }) => {
   };
 
   return (
-    <Dialog visible={visible} onHide={onHide} header="زیادکردنی قیست" modal className="w-96" dir="rtl">
+    <Dialog
+      visible={visible}
+      onHide={onHide}
+      header="زیادکردنی قیست"
+      modal
+      className="w-96"
+      dir="rtl"
+    >
       <div className="flex flex-col gap-4">
         {/* Student Dropdown */}
         <label className="font-semibold">خوێندکار</label>

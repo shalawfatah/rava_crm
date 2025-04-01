@@ -23,7 +23,7 @@ const ViewCourse = () => {
     const fetchCourse = async () => {
       const { data, error } = await supabase
         .from("courses")
-        .select("name, price, teacher_share, discount, teacher(name), course_type(name)")
+        .select("course_name(*), price, teacher_share, discount, teacher(name), course_type(name)")
         .eq("id", id)
         .single();
 
@@ -60,7 +60,7 @@ const ViewCourse = () => {
       <div className="max-w-2xl mx-auto">
         <Card title="بینینی زانیاری خول">
           <Fieldset legend="زانیاری خول">
-            <p><strong>ناو:</strong> {course.name}</p>
+            <p><strong>ناو:</strong> {course.course_name?.name}</p>
             <p><strong>نرخ:</strong> {course.price}</p>
             <p><strong>پشکی مامۆستا:</strong> {course.teacher_share}%</p>
             <p><strong>داشکاندن:</strong> {course.discount}%</p>

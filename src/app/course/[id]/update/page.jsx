@@ -31,13 +31,22 @@ const UpdateCoursePage = () => {
         // Fetch course details
         const { data: course, error: courseError } = await supabase
           .from("courses")
-          .select("name, price, teacher_share, discount, teacher, course_type")
+          .select(
+            "course_name(name), price, teacher_share, discount, teacher, course_type",
+          )
           .eq("id", id)
           .single();
 
         if (courseError) throw courseError;
 
-        setForm(course);
+        setForm({
+          name: course?.course_name?.name || "", // Extract course_name.name
+          price: course.price || "",
+          teacher_share: course.teacher_share || "",
+          discount: course.discount || "",
+          teacher: course.teacher || "",
+          course_type: course.course_type || "",
+        });
 
         // Fetch teachers
         const { data: teacherData, error: teacherError } = await supabase
@@ -74,7 +83,13 @@ const UpdateCoursePage = () => {
     try {
       const { error } = await supabase
         .from("courses")
-        .update(form)
+        .update({
+          price: form.price,
+          teacher_share: form.teacher_share,
+          discount: form.discount,
+          teacher: form.teacher,
+          course_type: form.course_type,
+        })
         .eq("id", id);
 
       if (error) throw error;
@@ -88,34 +103,67 @@ const UpdateCoursePage = () => {
   };
 
   return (
-    <div dir="rtl" className={`${rabar.className} min-h-screen p-12 mx-auto bg-gray-100`}>
-      <h2 className="text-xl font-semibold mb-4 text-gray-700">نوێکردنەوەی زانیاری خول</h2>
+    <div
+      dir="rtl"
+      className={`${rabar.className} min-h-screen p-12 mx-auto bg-gray-100`}
+    >
+      <h2 className="text-xl font-semibold mb-4 text-gray-700">
+        نوێکردنەوەی زانیاری خول
+      </h2>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <InputText name="name" value={form.name} onChange={handleChange} placeholder="ناو" className="p-inputtext-lg w-full" />
-        <InputText name="price" value={form.price} onChange={handleChange} placeholder="نرخ" className="p-inputtext-lg w-full" />
-        <InputText name="teacher_share" value={form.teacher_share} onChange={handleChange} placeholder="پشکی مامۆستا" className="p-inputtext-lg w-full" />
-        <InputText name="discount" value={form.discount} onChange={handleChange} placeholder="داشکاندن" className="p-inputtext-lg w-full" />
-        <Dropdown 
-          name="teacher" 
-          value={form.teacher} 
-          options={teachers} 
-          onChange={handleChange} 
-          optionLabel="name" 
-          optionValue="id" 
-          placeholder="مامۆستای خول" 
-          className="p-dropdown-lg w-full" 
+        <InputText
+          value={form.name}
+          placeholder="ناو"
+          className="p-inputtext-lg w-full"
         />
-        <Dropdown 
-          name="course_type" 
-          value={form.course_type} 
-          options={courseTypes} 
-          onChange={handleChange} 
-          optionLabel="name" 
-          optionValue="id" 
-          placeholder="جۆری خول" 
-          className="p-dropdown-lg w-full" 
+        <InputText
+          name="price"
+          value={form.price}
+          onChange={handleChange}
+          placeholder="نرخ"
+          className="p-inputtext-lg w-full"
         />
-        <Button label="نوێکردنەوە" icon="pi pi-check" type="submit" loading={loading} className="p-button-primary w-full" />
+        <InputText
+          name="teacher_share"
+          value={form.teacher_share}
+          onChange={handleChange}
+          placeholder="پشکی مامۆستا"
+          className="p-inputtext-lg w-full"
+        />
+        <InputText
+          name="discount"
+          value={form.discount}
+          onChange={handleChange}
+          placeholder="داشکاندن"
+          className="p-inputtext-lg w-full"
+        />
+        <Dropdown
+          name="teacher"
+          value={form.teacher}
+          options={teachers}
+          onChange={handleChange}
+          optionLabel="name"
+          optionValue="id"
+          placeholder="مامۆستای خول"
+          className="p-dropdown-lg w-full"
+        />
+        <Dropdown
+          name="course_type"
+          value={form.course_type}
+          options={courseTypes}
+          onChange={handleChange}
+          optionLabel="name"
+          optionValue="id"
+          placeholder="جۆری خول"
+          className="p-dropdown-lg w-full"
+        />
+        <Button
+          label="نوێکردنەوە"
+          icon="pi pi-check"
+          type="submit"
+          loading={loading}
+          className="p-button-primary w-full"
+        />
       </form>
     </div>
   );
