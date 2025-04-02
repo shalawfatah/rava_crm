@@ -38,13 +38,13 @@ const page = () => {
     const fetchCourses = async () => {
       const { data, error } = await supabase
         .from("student_courses")
-        .select("courses(name)")
+        .select("course_id(*)")
         .eq("student_id", id);
 
       if (error) {
         console.error("Error fetching courses:", error.message);
       } else {
-        setCourses(data.map((item) => item.courses)); // Extract course names
+        setCourses(data.map((item) => item.course_id));
       }
     };
 
@@ -68,6 +68,8 @@ const page = () => {
     );
   }
 
+
+        console.log('cc ', courses)
   return (
     <div className={`${rabar.className} bg-linear-65 from-purple-500 to-pink-500 min-h-screen p-6 mx-auto bg-white shadow-md rounded-md`} dir="rtl">
       <div className="max-w-2xl mx-auto">

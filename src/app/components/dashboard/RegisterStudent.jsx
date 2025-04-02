@@ -21,7 +21,9 @@ const RegisterStudent = () => {
     gender: "",
     address: "",
   });
+  const [selectedCourses, setSelectedCourses] = useState([]); // Store selected course IDs
   const [loading, setLoading] = useState(false);
+  const [studentId, setStudentId] = useState(null); // Track the student ID after registration
 
   const genders = [
     { label: "نێر", value: "male" },
@@ -54,19 +56,22 @@ const RegisterStudent = () => {
 
     if (error) {
       console.error("Error inserting student:", error.message);
-    } else {
-      console.log("Student registered:", student);
-      setForm({
-        name: "",
-        age: "",
-        phone: "",
-        school: "",
-        gender: "",
-        address: "",
-      });
-      router.push("/student");
+      setLoading(false);
+      return;
     }
 
+    setStudentId(student.id); // Store the student ID after successful registration
+
+    setForm({
+      name: "",
+      age: "",
+      phone: "",
+      school: "",
+      gender: "",
+      address: "",
+    });
+
+    router.push("/student");
     setLoading(false);
   };
 
@@ -125,7 +130,8 @@ const RegisterStudent = () => {
           className="w-full"
           required
         />
-        <CoursePick />
+        <CoursePick studentId={studentId} />{" "}
+        {/* Pass studentId to CoursePick */}
         <Button
           label="تۆمارکردن"
           icon="pi pi-check"

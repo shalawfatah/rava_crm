@@ -7,7 +7,7 @@ import { Button } from "primereact/button";
 import { Dialog } from "primereact/dialog";
 import { supabase } from "@/app/utils/supabase/client";
 import localFont from "next/font/local";
-import { useRouter } from "next/navigation";
+import TeacherExpense from "@/app/components/TeacherExpense";
 import OtherExpenseDialog from "@/app/components/OtherExpense";
 
 const rabar = localFont({ src: "../components/dashboard/rabar.ttf" });
@@ -15,9 +15,9 @@ const rabar = localFont({ src: "../components/dashboard/rabar.ttf" });
 const ExpensesTable = () => {
   const [expenses, setExpenses] = useState([]);
   const [isDialogVisible, setDialogVisible] = useState(false);
+  const [teacherDialogVisible, setTeacherDialogVisible] = useState(false);
   const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
   const [selectedExpenseId, setSelectedExpenseId] = useState(null);
-  const router = useRouter();
 
   useEffect(() => {
     fetchExpenses();
@@ -96,7 +96,7 @@ const ExpensesTable = () => {
             label="تۆمارکردنی خەرجی مامۆستا"
             icon="pi pi-plus"
             className="p-button-primary"
-            onClick={() => router.push("/expense/add-expense")}
+            onClick={() => setTeacherDialogVisible(true)}
           />
           <Button
             label="تۆمارکردنی خەرجی دیکە"
@@ -117,6 +117,7 @@ const ExpensesTable = () => {
       >
         <Column
           field="amount"
+          body={(rowData) => `${rowData.amount.toLocaleString()} د.ع`}
           header="بڕی خەرجی"
           style={{ width: "30%", textAlign: "right" }}
         />
@@ -159,6 +160,13 @@ const ExpensesTable = () => {
       >
         <p className="text-right">دەتەوێت ئەم خەرجییە بسڕیتەوە؟</p>
       </Dialog>
+
+      {/* TeacherExpense Modal */}
+      <TeacherExpense
+        visible={teacherDialogVisible}
+        onHide={() => setTeacherDialogVisible(false)}
+        onSubmit={handleAddExpense}
+      />
 
       {/* OtherExpenseDialog */}
       <OtherExpenseDialog

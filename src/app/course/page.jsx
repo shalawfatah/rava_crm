@@ -95,18 +95,32 @@ const CoursesTable = () => {
         <h2 className="text-2xl font-semibold text-gray-700 text-right">
           لیستی خولەکان
         </h2>
-        <Button
-          label="تۆمارکردنی خولی نوێ"
-          icon="pi pi-plus"
-          className="p-button-primary"
-          onClick={() => router.push("/course/add-course")}
-        />
+        <div className="flex gap-4 items-center">
+          <Button
+            label="تۆمارکردنی خولی نوێ"
+            icon="pi pi-plus"
+            className="p-button-primary"
+            onClick={() => router.push("/course/add-course")}
+          />
+          <Button
+            label="تۆمارکردنی جۆری خول"
+            icon="pi pi-plus"
+            className="p-button-primary"
+            onClick={() => router.push("/course/course-type")}
+          />
+          <Button
+            label="تۆمارکردنی گروپی خول"
+            icon="pi pi-plus"
+            className="p-button-primary"
+            onClick={() => router.push("/course/cohort")}
+          />
+        </div>
       </div>
       <DataTable
         value={courses}
         paginator
-        rows={5}
-        rowsPerPageOptions={[5, 10, 25, 50]}
+        rows={10}
+        rowsPerPageOptions={[10, 25, 50]}
         className="rtl-table"
         tableStyle={{ minWidth: "50rem", textAlign: "right" }}
       >
@@ -119,6 +133,7 @@ const CoursesTable = () => {
           field="price"
           header="نرخ"
           style={{ width: "15%", textAlign: "right" }}
+          body={(rowData) => `${rowData.price.toLocaleString()} د.ع`}
         />
         <Column
           field="teacher_share"

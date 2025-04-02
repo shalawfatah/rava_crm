@@ -17,7 +17,7 @@ const InstallmentDialog = ({ visible, onHide }) => {
 
   useEffect(() => {
     const fetchStudents = async () => {
-      const {data, error} = await supabase.rpc("get_enrolled_students");
+      const { data, error } = await supabase.rpc("get_enrolled_students");
       if (error) console.error("Error fetching students:", error);
       else setStudents(data);
     };
@@ -26,36 +26,35 @@ const InstallmentDialog = ({ visible, onHide }) => {
 
   const handleStudentChange = async (student) => {
     setSelectedStudent(student);
-    if (student) {
-      // Fetch income
-      const { data: income, error: incomeError } = await supabase
-        .from("income")
-        .select("id, amount")
-        .eq("student_id", student.id)
-        .single();
+    setIncomeAmount(null);
+    setInstallments([]);
 
-      if (incomeError) {
-        console.error("Error fetching income:", incomeError);
-        setIncomeAmount(null);
-      } else {
-        setIncomeAmount(income);
-      }
+    if (!student) return;
 
-      // Fetch installments
-      const { data: installmentData, error: installmentError } = await supabase
-        .from("installments")
-        .select("inst_amount")
-        .eq("income", income?.id);
+    // Fetch income
+    const { data: income, error: incomeError } = await supabase
+      .from("income")
+      .select("id, amount")
+      .eq("student_id", student.id)
+      .single();
 
-      if (installmentError) {
-        console.error("Error fetching installments:", installmentError);
-        setInstallments([]);
-      } else {
-        setInstallments(installmentData);
-      }
+    if (incomeError || !income) {
+      console.error("Error fetching income:", incomeError);
+      return;
+    }
+
+    setIncomeAmount(income);
+
+    // Fetch installments after income is set
+    const { data: installmentData, error: installmentError } = await supabase
+      .from("installments")
+      .select("inst_amount")
+      .eq("income", income.id);
+
+    if (installmentError) {
+      console.error("Error fetching installments:", installmentError);
     } else {
-      setIncomeAmount(null);
-      setInstallments([]);
+      setInstallments(installmentData);
     }
   };
 

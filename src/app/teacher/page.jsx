@@ -84,18 +84,26 @@ const TeachersTable = () => {
         <h2 className="text-2xl font-semibold text-gray-700 text-right">
           لیستی مامۆستایان
         </h2>
-        <Button
-          label="تۆمارکردنی مامۆستای نوێ"
-          icon="pi pi-plus"
-          className="p-button-primary"
-          onClick={() => router.push("/teacher/add-teacher")}
-        />
+        <div className="flex items-center gap-4">
+          <Button
+            label="تۆمارکردنی مامۆستای نوێ"
+            icon="pi pi-plus"
+            className="p-button-primary"
+            onClick={() => router.push("/teacher/add-teacher")}
+          />
+          <Button
+            label="تۆمارکردنی پسپۆڕیی"
+            icon="pi pi-plus"
+            className="p-button-primary"
+            onClick={() => router.push("/teacher/add-expertise")}
+          />
+        </div>
       </div>
       <DataTable
         value={teachers}
         paginator
-        rows={5}
-        rowsPerPageOptions={[5, 10, 25, 50]}
+        rows={10}
+        rowsPerPageOptions={[10, 25, 50]}
         className="rtl-table"
         tableStyle={{ minWidth: "40rem", textAlign: "right" }}
       >
@@ -122,14 +130,21 @@ const TeachersTable = () => {
         header="سڕینەوەی مامۆستا"
         footer={
           <div>
-            <Button label="پاشگەزبوونەوە" onClick={() => setDeleteTeacher(null)} className="p-button-text" />
-            <Button label="سڕینەوە" onClick={handleDelete} className="p-button-danger" autoFocus />
+            <Button
+              label="پاشگەزبوونەوە"
+              onClick={() => setDeleteTeacher(null)}
+              className="p-button-text"
+            />
+            <Button
+              label="سڕینەوە"
+              onClick={handleDelete}
+              className="p-button-danger"
+              autoFocus
+            />
           </div>
         }
       >
-        {deleteTeacher && (
-          <p>دەتەوێت مامۆستا {deleteTeacher.name} بسڕیتەوە؟</p>
-        )}
+        {deleteTeacher && <p>دەتەوێت مامۆستا {deleteTeacher.name} بسڕیتەوە؟</p>}
       </Dialog>
     </div>
   );
