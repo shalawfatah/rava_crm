@@ -6,14 +6,15 @@ import { Dropdown } from "primereact/dropdown";
 import { InputNumber } from "primereact/inputnumber";
 import { Button } from "primereact/button";
 import { supabase } from "@/app/utils/supabase/client";
+import localFont from "next/font/local";
+
+const rabar = localFont({ src: "./dashboard/rabar.ttf" });
 
 const InstallmentDialog = ({ visible, onHide }) => {
   const [students, setStudents] = useState([]);
   const [selectedStudent, setSelectedStudent] = useState(null);
-  const [incomeAmount, setIncomeAmount] = useState(null);
+  const [financials, setFinancials] = useState(null);
   const [installmentAmount, setInstallmentAmount] = useState(null);
-  const [installments, setInstallments] = useState([]);
-  const [remainingBalance, setRemainingBalance] = useState(null);
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -26,62 +27,48 @@ const InstallmentDialog = ({ visible, onHide }) => {
 
   const handleStudentChange = async (student) => {
     setSelectedStudent(student);
-    setIncomeAmount(null);
-    setInstallments([]);
+    setFinancials(null);
 
     if (!student) return;
 
-    // Fetch income
-    const { data: income, error: incomeError } = await supabase
-      .from("income")
-      .select("id, amount")
-      .eq("student_id", student.id)
-      .single();
+    // Fetch student financial data
+    const { data, error } = await supabase.rpc("get_student_financials", {
+      student_uuid: student.id,
+    });
 
-    if (incomeError || !income) {
-      console.error("Error fetching income:", incomeError);
+    if (error) {
+      console.error("Error fetching financials:", error);
       return;
     }
 
-    setIncomeAmount(income);
-
-    // Fetch installments after income is set
-    const { data: installmentData, error: installmentError } = await supabase
-      .from("installments")
-      .select("inst_amount")
-      .eq("income", income.id);
-
-    if (installmentError) {
-      console.error("Error fetching installments:", installmentError);
-    } else {
-      setInstallments(installmentData);
-    }
+    setFinancials(data);
   };
 
-  useEffect(() => {
-    if (incomeAmount) {
-      const totalInstallments = installments.reduce(
-        (sum, inst) => sum + inst.inst_amount,
-        0,
-      );
-      setRemainingBalance(incomeAmount.amount - totalInstallments);
-    }
-  }, [installments, incomeAmount]);
+  const formatCurrency = (amount) => {
+    const formattedAmount = (amount || 0).toLocaleString("ar-IQ");
+    return (
+      <div className="flex flex-col items-center">
+        <div className="text-lg">
+          {formattedAmount} <span className="text-sm">د.ع</span>
+        </div>
+      </div>
+    );
+  };
 
   const handleSubmit = async () => {
-    if (!selectedStudent || !installmentAmount || !incomeAmount) return;
+    if (!selectedStudent || !installmentAmount) return;
 
     const { error } = await supabase.from("installments").insert([
       {
         inst_amount: installmentAmount,
-        income: incomeAmount.id,
+        student_id: selectedStudent.id,
       },
     ]);
 
     if (error) {
       console.error("Error adding installment:", error);
     } else {
-      handleStudentChange(selectedStudent); // Refresh installments
+      handleStudentChange(selectedStudent); // Refresh financials
       setInstallmentAmount(null);
     }
   };
@@ -92,12 +79,13 @@ const InstallmentDialog = ({ visible, onHide }) => {
       onHide={onHide}
       header="زیادکردنی قیست"
       modal
-      className="w-96"
+      className={`${rabar.className} w-96`}
       dir="rtl"
     >
       <div className="flex flex-col gap-4">
         {/* Student Dropdown */}
         <label className="font-semibold">خوێندکار</label>
+
         <Dropdown
           value={selectedStudent}
           options={students}
@@ -105,31 +93,34 @@ const InstallmentDialog = ({ visible, onHide }) => {
           optionLabel="name"
           placeholder="خوێندکارێک هەڵبژێرە"
           className="w-full"
+          filter
+          filterBy="name" // Ensure filtering is done on the "name" field
         />
 
-        {/* Income Amount Display */}
-        {incomeAmount && (
-          <div className="text-lg font-semibold text-blue-600">
-            بڕی داهات: {incomeAmount.amount} دینار
-          </div>
-        )}
-
-        {/* List of Installments */}
-        {installments.length > 0 && (
-          <div className="mt-4">
-            <div className="font-semibold">قیستەکان:</div>
-            {installments.map((inst, index) => (
-              <div key={index} className="text-sm text-gray-700">
-                قیستی {index + 1}: {inst.inst_amount} دینار
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Remaining Balance */}
-        {remainingBalance !== null && (
-          <div className="text-lg font-semibold text-red-600">
-            پارەی ماوە: {remainingBalance} دینار
+        {/* Financial Info Display */}
+        {financials && (
+          <div className="mt-4 p-3 bg-gray-100 rounded">
+            <div className="font-semibold text-blue-600">
+              بڕی قەرز: {formatCurrency(financials.total_debt)}
+            </div>
+            <div className="font-semibold text-green-600">
+              کۆی دراو: {formatCurrency(financials.total_income)}
+            </div>
+            <div className="font-semibold text-red-600">
+              قەرزی ماوە: {formatCurrency(financials.remaining_debt)}
+            </div>
+            <div className="mt-2">
+              <div className="font-semibold">قیستەکانی پێشتر:</div>
+              {financials.installment_array.length > 0 ? (
+                financials.installment_array.map((inst, index) => (
+                  <div key={index} className="text-sm text-gray-700">
+                    قیستی {index + 1}: {formatCurrency(inst)}
+                  </div>
+                ))
+              ) : (
+                <div className="text-sm text-gray-500">هیچ قیست نیە</div>
+              )}
+            </div>
           </div>
         )}
 

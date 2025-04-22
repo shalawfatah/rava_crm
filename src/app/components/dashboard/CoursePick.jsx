@@ -17,17 +17,17 @@ const find_course_id = async (name, course_type, cohort, teacher) => {
     return null;
   }
 
-  return data; // Ensure it matches the expected response format
+  return data;
 };
 
-function CoursePick({ studentId }) {
+function CoursePick({ onCourseChange }) {
   const [names, setNames] = useState([]);
   const [types, setTypes] = useState([]);
   const [cohorts, setCohorts] = useState([]);
-  const [selectedCourses, setSelectedCourses] = useState({});
   const [teachers, setTeachers] = useState({});
   const [filteredTypes, setFilteredTypes] = useState({});
   const [filteredCohorts, setFilteredCohorts] = useState({});
+  const [selectedCourses, setSelectedCourses] = useState({});
 
   useEffect(() => {
     const fetchData = async () => {
@@ -78,66 +78,63 @@ function CoursePick({ studentId }) {
   };
 
   const handleCheckboxChange = (id) => {
-    setSelectedCourses((prev) => ({
-      ...prev,
-      [id]: prev[id] ? undefined : { teacher: null, type: null, cohort: null },
-    }));
+    const newSelected = { ...selectedCourses };
+    if (newSelected[id]) {
+      delete newSelected[id];
+    } else {
+      newSelected[id] = { teacher: null, type: null, cohort: null };
+    }
+
+    setSelectedCourses(newSelected);
+
+    if (onCourseChange) {
+      onCourseChange(newSelected); // ✅ now safe
+    }
+
     if (!teachers[id]) fetchTeachers(id);
   };
 
-  const handleDropdownChange = (id, key, value) => {
+  const handleDropdownChange = async (id, key, value) => {
     const updatedCourse = { ...selectedCourses[id], [key]: value };
 
     if (key === "teacher") {
       fetchCourseDetails(id, value);
     }
 
-    setSelectedCourses((prev) => ({
-      ...prev,
+    const newSelectedCourses = {
+      ...selectedCourses,
       [id]: updatedCourse,
-    }));
-  };
+    };
 
-  const registerCoursesForStudent = async () => {
-    if (!studentId) return;
+    setSelectedCourses(newSelectedCourses);
 
-    const courseEntries = Object.keys(selectedCourses).map(async (courseId) => {
-      const { teacher, type, cohort } = selectedCourses[courseId];
-      if (teacher && type && cohort) {
-        // Find the course ID based on selected filters
-        const courseName = courseId;
-        const course_id = await find_course_id(
-          courseName,
-          type,
-          cohort,
-          teacher,
-        );
+    if (updatedCourse.teacher && updatedCourse.type && updatedCourse.cohort) {
+      const courseId = await find_course_id(
+        id,
+        updatedCourse.type,
+        updatedCourse.cohort,
+        updatedCourse.teacher,
+      );
 
-        if (course_id) {
-          const { data, error } = await supabase
-            .from("student_courses")
-            .insert({
-              student_id: studentId,
-              course_id: course_id,
-            });
+      if (courseId) {
+        const finalCourse = { ...updatedCourse, course_id: courseId };
+        const finalSelectedCourses = {
+          ...selectedCourses,
+          [id]: finalCourse,
+        };
 
-          if (error) {
-            console.error("Error registering courses:", error.message);
-          } else {
-            console.log("Courses registered:", data);
-          }
+        setSelectedCourses(finalSelectedCourses);
+
+        if (onCourseChange) {
+          onCourseChange(finalSelectedCourses);
         }
       }
-    });
-
-    await Promise.all(courseEntries);
-  };
-
-  useEffect(() => {
-    if (studentId && Object.keys(selectedCourses).length) {
-      registerCoursesForStudent();
+    } else {
+      if (onCourseChange) {
+        onCourseChange(newSelectedCourses);
+      }
     }
-  }, [studentId, selectedCourses]);
+  };
 
   return (
     <div className="p-4">

@@ -13,6 +13,7 @@ const rabar = localFont({ src: "./rabar.ttf" });
 
 const RegisterStudent = () => {
   const router = useRouter();
+
   const [form, setForm] = useState({
     name: "",
     age: "",
@@ -21,9 +22,9 @@ const RegisterStudent = () => {
     gender: "",
     address: "",
   });
-  const [selectedCourses, setSelectedCourses] = useState([]); // Store selected course IDs
+
+  const [selectedCourses, setSelectedCourses] = useState({});
   const [loading, setLoading] = useState(false);
-  const [studentId, setStudentId] = useState(null); // Track the student ID after registration
 
   const genders = [
     { label: "نێر", value: "male" },
@@ -33,6 +34,10 @@ const RegisterStudent = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleCourseChange = (courses) => {
+    setSelectedCourses(courses);
   };
 
   const handleSubmit = async (e) => {
@@ -51,7 +56,7 @@ const RegisterStudent = () => {
     const { data: student, error } = await supabase
       .from("students")
       .insert([studentData])
-      .select("id")
+      .select()
       .single();
 
     if (error) {
@@ -60,7 +65,27 @@ const RegisterStudent = () => {
       return;
     }
 
-    setStudentId(student.id); // Store the student ID after successful registration
+    // Extract course_id values
+    const courseIds = Object.values(selectedCourses)
+      .map((course) => course.course_id)
+      .filter(Boolean); // Filter out undefined/null
+
+    // If using a junction table for student-course relationships
+    if (courseIds.length > 0) {
+      const studentCourses = courseIds.map((course_id) => ({
+        student_id: student.id,
+        course_id,
+      }));
+
+      const { error: linkError } = await supabase
+        .from("student_courses") // Change to your actual join table name
+        .insert(studentCourses);
+
+      if (linkError) {
+        console.error("Error linking student to courses:", linkError.message);
+        // Optionally rollback student if needed
+      }
+    }
 
     setForm({
       name: "",
@@ -71,8 +96,9 @@ const RegisterStudent = () => {
       address: "",
     });
 
-    router.push("/student");
+    setSelectedCourses({});
     setLoading(false);
+    router.push("/student");
   };
 
   return (
@@ -130,8 +156,9 @@ const RegisterStudent = () => {
           className="w-full"
           required
         />
-        <CoursePick studentId={studentId} />{" "}
-        {/* Pass studentId to CoursePick */}
+
+        <CoursePick onCourseChange={handleCourseChange} />
+
         <Button
           label="تۆمارکردن"
           icon="pi pi-check"
