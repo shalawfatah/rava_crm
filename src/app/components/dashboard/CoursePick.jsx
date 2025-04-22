@@ -162,7 +162,7 @@ function CoursePick({ onCourseChange }) {
                   onChange={(e) =>
                     handleDropdownChange(course.id, "teacher", e.value)
                   }
-                  placeholder="Select Teacher"
+                  placeholder="مامۆستایەک هەڵبژێرە"
                   className="w-full"
                 />
                 <Dropdown
@@ -176,7 +176,7 @@ function CoursePick({ onCourseChange }) {
                   onChange={(e) =>
                     handleDropdownChange(course.id, "type", e.value)
                   }
-                  placeholder="Select Course Type"
+                  placeholder="جۆری خول"
                   className="w-full"
                   disabled={!selectedCourses[course.id].teacher}
                 />
@@ -191,7 +191,7 @@ function CoursePick({ onCourseChange }) {
                   onChange={(e) =>
                     handleDropdownChange(course.id, "cohort", e.value)
                   }
-                  placeholder="Select Cohort"
+                  placeholder="گروپی خول"
                   className="w-full"
                   disabled={!selectedCourses[course.id].teacher}
                 />
