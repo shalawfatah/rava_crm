@@ -9,8 +9,8 @@ export default function Home() {
       dir="rtl"
       className="p-5 min-h-screen bg-gradient-to-b from-gray-200 to-gray-400"
     >
-      <div className="max-w-6xl m-auto">
-        <div className="flex flex-row flex-wrap gap-4 justify-center my-6">
+      <div className="max-w-[1200px] m-auto">
+        <div className="flex flex-row flex-wrap gap-4 justify-around my-6">
           <IncomeCard />
           <ExpenseCard />
           <ProfitCard />
